@@ -17,6 +17,8 @@ package remote
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -187,6 +189,40 @@ func (r *remoteIndex) childDescriptor(child v1.Descriptor, platform v1.Platform)
 		Manifest:   manifest,
 		Descriptor: child,
 		platform:   platform,
+	}, nil
+}
+
+func (r *remoteIndex) Blob(h v1.Hash) (io.ReadCloser, error) {
+	// See if this blob actually lives under /manifests/...
+	index, err := r.IndexManifest()
+	if err != nil {
+		return nil, err
+	}
+	for _, desc := range index.Manifests {
+		if h == desc.Digest {
+			desc, err := r.childDescriptor(desc, defaultPlatform)
+			if err != nil {
+				return nil, err
+			}
+			return ioutil.NopCloser(bytes.NewReader(desc.Manifest)), nil
+		}
+	}
+
+	// Otherwise we'll try to get its blob.
+	return r.fetchBlob(h)
+}
+
+func (r *remoteIndex) LayerByDigest(h v1.Hash) (v1.Layer, error) {
+	l, err := partial.CompressedToLayer(&remoteLayer{
+		fetcher: r.fetcher,
+		digest:  h,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &MountableLayer{
+		Layer:     l,
+		Reference: r.Ref,
 	}, nil
 }
 

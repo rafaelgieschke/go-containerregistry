@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/go-containerregistry/pkg/internal/legacy/schema1"
 	"github.com/google/go-containerregistry/pkg/internal/retry"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -532,6 +533,20 @@ func WriteIndex(ref name.Reference, ii v1.ImageIndex, options ...Option) error {
 			if err := Write(ref, img, WithAuth(o.auth), WithTransport(o.transport)); err != nil {
 				return err
 			}
+		case types.DockerManifestSchema1, types.DockerManifestSchema1Signed:
+			if wb, ok := ii.(schema1.WithBlob); ok {
+				img, err := schema1.Child(wb, desc.Digest, desc.MediaType)
+				if err != nil {
+					return err
+				}
+				if err := Write(ref, img, options...); err != nil {
+					return err
+				}
+			} else {
+				logs.Warn.Printf("cannot copy child %q with media type %q", desc.Digest, desc.MediaType)
+			}
+		default:
+			logs.Warn.Printf("ignoring child %q with media type %q", desc.Digest, desc.MediaType)
 		}
 	}
 

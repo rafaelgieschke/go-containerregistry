@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/internal/legacy/schema1"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/registry"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -69,8 +70,8 @@ func TestCopySchema1(t *testing.T) {
 	if err := remote.WriteLayer(layerRef.Context(), layer); err != nil {
 		t.Fatal(err)
 	}
-	manifest := schema1{
-		FSLayers: []fslayer{{
+	manifest := schema1.Manifest{
+		FSLayers: []schema1.Fslayer{{
 			BlobSum: digest.String(),
 		}},
 	}

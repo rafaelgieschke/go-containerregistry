@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/internal/legacy/schema1"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -32,7 +33,7 @@ import (
 // CopySchema1 allows `[g]crane cp` to work with old images without adding
 // full support for schema 1 images to this package.
 func CopySchema1(desc *remote.Descriptor, srcRef, dstRef name.Reference, srcAuth, dstAuth authn.Authenticator) error {
-	m := schema1{}
+	m := schema1.Manifest{}
 	if err := json.NewDecoder(bytes.NewReader(desc.Manifest)).Decode(&m); err != nil {
 		return err
 	}
@@ -89,12 +90,4 @@ func putManifest(desc *remote.Descriptor, dstRef name.Reference, dstAuth authn.A
 	// The image was successfully pushed!
 	logs.Progress.Printf("%v: digest: %v size: %d", dstRef, desc.Digest, len(desc.Manifest))
 	return nil
-}
-
-type fslayer struct {
-	BlobSum string `json:"blobSum"`
-}
-
-type schema1 struct {
-	FSLayers []fslayer `json:"fsLayers"`
 }
