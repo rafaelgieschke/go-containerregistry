@@ -31,8 +31,13 @@ type Fslayer struct {
 	BlobSum string `json:"blobSum"`
 }
 
+type History struct {
+	V1Compatibility string `json:"v1Compatibility"`
+}
+
 type Manifest struct {
 	FSLayers []Fslayer `json:"fsLayers"`
+	History  []History `json:"history"`
 }
 
 type WithBlob interface {
@@ -117,6 +122,11 @@ func (i *schema1Image) RawManifest() ([]byte, error) {
 }
 
 func (i *schema1Image) RawConfigFile() ([]byte, error) {
+	m := Manifest{}
+	if err := json.NewDecoder(bytes.NewReader(i.manifest)).Decode(&m); err != nil {
+		return nil, err
+	}
+	return []byte(m.History[0].V1Compatibility), nil
 	r, err := empty.Layer.Compressed()
 	if err != nil {
 		return nil, err
