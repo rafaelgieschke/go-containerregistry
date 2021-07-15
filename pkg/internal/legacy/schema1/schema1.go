@@ -162,3 +162,12 @@ func Child(source WithBlob, h v1.Hash, mt types.MediaType) (v1.Image, error) {
 		mediaType: mt,
 	}, nil
 }
+
+func New(source WithBlob, h v1.Hash, mt types.MediaType, b []byte) v1.Image {
+	return &schema1Image{
+		manifest:  b,
+		source:    source,
+		digest:    h,
+		mediaType: mt,
+	}
+}

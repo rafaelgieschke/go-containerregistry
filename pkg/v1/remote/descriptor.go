@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/internal/legacy/schema1"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -145,6 +146,12 @@ func (d *Descriptor) Image() (v1.Image, error) {
 	case types.DockerManifestSchema1, types.DockerManifestSchema1Signed:
 		// We don't care to support schema 1 images:
 		// https://github.com/google/go-containerregistry/issues/377
+		return schema1.New(
+			d.remoteIndex(),
+			d.Digest,
+			d.MediaType,
+			d.Manifest,
+		), nil
 		return nil, newErrSchema1(d.MediaType)
 	case types.OCIImageIndex, types.DockerManifestList:
 		// We want an image but the registry has an index, resolve it to an image.
